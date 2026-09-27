@@ -7,7 +7,7 @@ from psycopg import errors as e
 from psycopg import pq, sql
 from psycopg.adapt import PyFormat
 from psycopg.types import TypeInfo
-from psycopg.types.enum import EnumInfo, _make_enum, register_enum
+from psycopg.types.enum import EnumInfo, register_enum
 
 from ..fix_crdb import crdb_encoding
 
@@ -385,6 +385,9 @@ def test_remap_by_value(conn):
         assert cur.fetchone()[0] is enum[label.lower()]
 
 
-def test_make_enum_empty_label():
+def test_register_empty_label(conn):
+    conn.execute("drop type if exists emptylabelenum")
+    conn.execute("create type emptylabelenum as enum ('')")
+    info = EnumInfo.fetch(conn, "emptylabelenum")
     with pytest.raises(e.DataError):
-        _make_enum("EmptyLabel", ("",))
+        register_enum(info, conn)
